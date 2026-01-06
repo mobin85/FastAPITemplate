@@ -188,7 +188,7 @@ def tpl_app_application() -> str:
 def tpl_app_main() -> str:
     return textwrap.dedent(
         """\
-        from .application import get_app
+        from app.core.application import get_app
         from .routers import router
 
 
@@ -209,7 +209,7 @@ def tpl_app_main() -> str:
 
         def get_app_base():
             # Keep this separated for easier testing/overrides.
-            from .application import get_app as _get
+            from app.core.application import get_app as _get
             return _get()
         """
     )
@@ -222,7 +222,7 @@ def tpl_app_main() -> str:
 def tpl_app_main_simpler() -> str:
     return textwrap.dedent(
         """\
-        from .application import get_app as _get_app
+        from app.core.application import get_app as _get_app
         from .routers import routers
 
 
@@ -233,6 +233,22 @@ def tpl_app_main_simpler() -> str:
                 app.include_router(router)
 
             return app
+        """
+    )
+
+
+def tpl_core_middlewares() -> str:
+    return textwrap.dedent(
+        """\
+        from starlette.middleware.base import BaseHTTPMiddleware
+
+
+        class ExampleMiddleware(BaseHTTPMiddleware):
+            async def dispatch(self, request, call_next):
+                # process request
+                response = await call_next(request)
+                # process response
+                return response
         """
     )
 
@@ -264,7 +280,7 @@ def tpl_base_engine() -> str:
         from sqlalchemy.ext.asyncio import create_async_engine
         from sqlalchemy.ext.asyncio.engine import AsyncEngine
 
-        from app.settings import get_settings
+        from app.core.settings import get_settings
 
 
         class Engine:
@@ -364,7 +380,7 @@ def tpl_alembic_env_py() -> str:
         from sqlalchemy import engine_from_config, pool
 
         from app.base.model import Base
-        from app.settings import get_settings
+        from app.core.settings import get_settings
 
 
         config = context.config
@@ -477,6 +493,7 @@ def startproject(
     (project_dir / "scripts").mkdir(parents=True, exist_ok=True)
     # Base app structure
     (project_dir / "app" / "base").mkdir(parents=True, exist_ok=True)
+    (project_dir / "app" / "core").mkdir(parents=True, exist_ok=True)
 
     # Write project files
     write_text(project_dir / ".env", tpl_env_example(name), force=force)
@@ -498,13 +515,26 @@ def startproject(
     # app core
     write_text(project_dir / "app" / "__init__.py", tpl_app_init(), force=force)
     write_text(project_dir / "app" / "routers.py", tpl_app_routers(), force=force)
-    write_text(project_dir / "app" / "settings.py", tpl_app_settings(), force=force)
     write_text(
         project_dir / "app" / "dependencies.py", tpl_app_dependencies(), force=force
     )
+
+    # app core
+    write_text(project_dir / "app" / "core" / "__init__.py", "", force=force)
     write_text(
-        project_dir / "app" / "application.py", tpl_app_application(), force=force
+        project_dir / "app" / "core" / "settings.py", tpl_app_settings(), force=force
     )
+    write_text(
+        project_dir / "app" / "core" / "application.py",
+        tpl_app_application(),
+        force=force,
+    )
+    write_text(
+        project_dir / "app" / "core" / "middlewares.py",
+        tpl_core_middlewares(),
+        force=force,
+    )
+
     write_text(project_dir / "app" / "main.py", tpl_app_main_simpler(), force=force)
 
     # app base (service, repository, engine, model)
