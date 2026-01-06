@@ -42,7 +42,7 @@ def write_text(path: Path, content: str, force: bool) -> None:
 
 
 def run(cmd: list[str], cwd: Path | None = None) -> None:
-    subprocess.check_call(cmd, cwd=str(cwd) if cwd else None)
+    subprocess.run(cmd, cwd=str(cwd) if cwd else None)
 
 
 # ----------------------------
@@ -222,17 +222,23 @@ def tpl_app_main() -> str:
 def tpl_app_main_simpler() -> str:
     return textwrap.dedent(
         """\
+        from app.base.engine import get_engine
         from app.core.application import get_app as _get_app
+        from app.base.model import Base
+
         from .routers import routers
 
 
         def get_app():
             app = _get_app()
 
+            Base.metadata.create_all(get_engine())
+
             for router in routers:
                 app.include_router(router)
 
             return app
+
         """
     )
 
