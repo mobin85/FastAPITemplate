@@ -515,11 +515,8 @@ def startproject(
     # app core
     write_text(project_dir / "app" / "__init__.py", tpl_app_init(), force=force)
     write_text(project_dir / "app" / "routers.py", tpl_app_routers(), force=force)
-    write_text(
-        project_dir / "app" / "dependencies.py", tpl_app_dependencies(), force=force
-    )
 
-    # app core
+    # app core (settings, application, middlewares, dependencies)
     write_text(project_dir / "app" / "core" / "__init__.py", "", force=force)
     write_text(
         project_dir / "app" / "core" / "settings.py", tpl_app_settings(), force=force
@@ -532,6 +529,11 @@ def startproject(
     write_text(
         project_dir / "app" / "core" / "middlewares.py",
         tpl_core_middlewares(),
+        force=force,
+    )
+    write_text(
+        project_dir / "app" / "core" / "dependencies.py",
+        tpl_app_dependencies(),
         force=force,
     )
 
